@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  backend
+
+  Sample SAM Template for backend
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+
+Resources:
+  CreateClientSecretFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: src/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          STRIPE_SECRET_KEY_PATH: prod/applePayPoc/stripeSecretKey
+          STRIPE_CONNECT_ACCOUNT_ID: acct_1NpZhLCMzrNxPzqB
+          REGION: !Sub AWS:Region
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: arn:aws:secretsmanager:${AWS:Region}:${AWS:AccountId}:secret:prod/applePayPoc/stripeSecretKey-YmSAGW
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /create-secret
+            Method: POST
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/create-secret/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt CreateClientSecretFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt CreateClientSecretFunctionRole.Arn
